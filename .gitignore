@@ -19,3 +19,6 @@ dist/
 
 data/
 3rdparty/
+
+*.pb
+*.pbtxt

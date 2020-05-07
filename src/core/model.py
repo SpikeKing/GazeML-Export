@@ -382,4 +382,50 @@ class BaseModel(object):
                 },
             )
             outputs['inference_time'] = 1e3*(time.time() - start_time)
+            print('[Info] fetches: {}'.format(fetches))
+
+            # --------------------------------------------------------------------------#
+            # 导出模型
+            sess = self._tensorflow_session
+            from tensorflow.python.framework import graph_util
+            constant_graph = graph_util.convert_variables_to_constants(
+                sess, sess.graph_def,
+                [
+                    'hourglass/hg_2/after/hmap/conv/BiasAdd',  # heatmaps
+                    'upscale/mul',  # landmarks
+                    'radius/out/fc/BiasAdd',  # radius
+                    'Video/fifo_queue_DequeueMany',  # frame_index, eye, eye_index
+                ])
+
+            with tf.gfile.FastGFile('./gaze.pb', mode='wb') as f:
+                f.write(constant_graph.SerializeToString())
+            # --------------------------------------------------------------------------#
+
+            # --------------------------------------------------------------------------#
+            # 替换OP
+            from tensorflow.python.platform import gfile
+
+            f = gfile.FastGFile('./gaze.pb', "rb")
+            graph_def = tf.GraphDef()
+            graph_def.ParseFromString(f.read())
+
+            for node in graph_def.node:
+                if node.op == 'RefSwitch':
+                    node.op = 'Switch'
+                    for index in range(len(node.input)):
+                        if 'moving_' in node.input[index]:
+                            node.input[index] = node.input[index] + '/read'
+                elif node.op == 'AssignSub':
+                    node.op = 'Sub'
+                    if 'use_locking' in node.attr:
+                        del node.attr['use_locking']
+
+            # import graph into session
+            tf.import_graph_def(graph_def, name='')
+            tf.train.write_graph(graph_def, './', 'good_frozen_b2.pb', as_text=False)
+            tf.train.write_graph(graph_def, './', 'good_frozen_b2.pbtxt', as_text=True)
+            # --------------------------------------------------------------------------#
+
+            raise Exception('模型导出完成!!!')
+
             yield outputs

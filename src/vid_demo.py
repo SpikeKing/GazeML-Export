@@ -27,8 +27,14 @@ def save_img(img_path, img):
 
 
 def process_output(output, batch_size, data_source, out_dir):
-    final_img = None
-    frame_index = None
+    """
+    处理结果
+    :param output: 输出
+    :param batch_size: batch_size
+    :param data_source: 数据源
+    :param out_dir: 输出文件夹
+    :return: None
+    """
     for j in range(batch_size):
         frame_index = output['frame_index'][j]
         print('[Info] frame_index: {}'.format(frame_index))
@@ -194,8 +200,8 @@ def process_output(output, batch_size, data_source, out_dir):
             show_img_bgr(bgr)  # 眼部图像
         final_img = copy.deepcopy(bgr)
 
-    img_path = os.path.join(out_dir, 'frame-{}.jpg'.format(str(frame_index).zfill(4)))
-    save_img(img_path=img_path, img=final_img)
+        img_path = os.path.join(out_dir, 'frame-{}.jpg'.format(str(frame_index).zfill(4)))
+        save_img(img_path=img_path, img=final_img)
     # show_img(final_img)  # 眼部图像
 
     print('[Info] 绘制完成!')
@@ -221,7 +227,8 @@ def main():
     mkdir_if_not_exist(VIDS_DIR)
     mkdir_if_not_exist(frames_dir)
 
-    from_video = os.path.join(VIDS_DIR, "normal_video.mp4")
+    # from_video = os.path.join(VIDS_DIR, "normal_video.mp4")
+    from_video = os.path.join(VIDS_DIR, "vid_no_glasses.mp4")
 
     # record_video = os.path.join(DATA_DIR, "normal_video.out.mp4")
 
@@ -248,12 +255,14 @@ def main():
 
     tf.logging.set_verbosity(tf.logging.INFO)
     session = tf.Session(config=session_config)
-    batch_size = 1
+
+    batch_size = 2
     print('[Info] 输入视频路径: {}'.format(from_video))
     assert os.path.isfile(from_video)
 
     data_source = Video(from_video,
-                        tensorflow_session=session, batch_size=batch_size,
+                        tensorflow_session=session,
+                        batch_size=batch_size,
                         data_format='NCHW' if gpu_available else 'NHWC',
                         eye_image_shape=(108, 180))
 
@@ -278,13 +287,11 @@ def main():
         print('')
         print('-' * 50)
         output = next(infer)
-        process_output(output, batch_size, data_source, frames_dir)
+        process_output(output, batch_size, data_source, frames_dir)  # 处理输出
         count += 1
         print('count: {}'.format(count))
-        if count == 1000:
+        if count == 10:
             break
-
-    session.close()
 
 
 if __name__ == '__main__':
