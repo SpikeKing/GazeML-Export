@@ -13,6 +13,7 @@ from .time_manager import TimeManager
 from .summary_manager import SummaryManager
 from .checkpoint_manager import CheckpointManager
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -381,11 +382,12 @@ class BaseModel(object):
                     self.use_batch_statistics: True,
                 },
             )
-            outputs['inference_time'] = 1e3*(time.time() - start_time)
+            outputs['inference_time'] = 1e3 * (time.time() - start_time)
             print('[Info] fetches: {}'.format(fetches))
 
             # --------------------------------------------------------------------------#
             # 导出模型
+            from root_dir import MODELS_DIR
             sess = self._tensorflow_session
             from tensorflow.python.framework import graph_util
             constant_graph = graph_util.convert_variables_to_constants(
@@ -397,7 +399,9 @@ class BaseModel(object):
                     'Video/fifo_queue_DequeueMany',  # frame_index, eye, eye_index
                 ])
 
-            with tf.gfile.FastGFile('./gaze.pb', mode='wb') as f:
+            gaze_path = os.path.join(MODELS_DIR, "gaze.pb")
+
+            with tf.gfile.FastGFile(gaze_path, mode='wb') as f:
                 f.write(constant_graph.SerializeToString())
             # --------------------------------------------------------------------------#
 
@@ -405,7 +409,7 @@ class BaseModel(object):
             # 替换OP
             from tensorflow.python.platform import gfile
 
-            f = gfile.FastGFile('./gaze.pb', "rb")
+            f = gfile.FastGFile(gaze_path, "rb")
             graph_def = tf.GraphDef()
             graph_def.ParseFromString(f.read())
 
@@ -422,8 +426,11 @@ class BaseModel(object):
 
             # import graph into session
             tf.import_graph_def(graph_def, name='')
-            tf.train.write_graph(graph_def, './', 'good_frozen_b2.pb', as_text=False)
-            tf.train.write_graph(graph_def, './', 'good_frozen_b2.pbtxt', as_text=True)
+
+            gaze_opt_name = "gaze_opt_b2"
+
+            tf.train.write_graph(graph_def, MODELS_DIR, "{}.pb".format(gaze_opt_name), as_text=False)
+            tf.train.write_graph(graph_def, MODELS_DIR, "{}.pbtxt".format(gaze_opt_name), as_text=True)
             # --------------------------------------------------------------------------#
 
             raise Exception('模型导出完成!!!')

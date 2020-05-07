@@ -82,7 +82,7 @@ def get_image_boxes(bounding_boxes, img, size=24):
         img_box = np.zeros((h[i], w[i], 3), 'uint8')
 
         img_array = np.asarray(img, 'uint8')
-        img_box[dy[i]:(edy[i] + 1), dx[i]:(edx[i] + 1), :] =\
+        img_box[dy[i]:(edy[i] + 1), dx[i]:(edx[i] + 1), :] = \
             img_array[y[i]:(ey[i] + 1), x[i]:(ex[i] + 1), :]
 
         img_box = cv2.resize(img_box, (size, size))
@@ -98,7 +98,7 @@ def correct_bboxes(bboxes, width, height):
 
     x, y, ex, ey = x1, y1, x2, y2
 
-    dx, dy = np.zeros((num_boxes, )), np.zeros((num_boxes, ))
+    dx, dy = np.zeros((num_boxes,)), np.zeros((num_boxes,))
     edx, edy = w.copy() - 1.0, h.copy() - 1.0
 
     ind = np.where(ex > width - 1.0)[0]
@@ -186,7 +186,7 @@ class RNet(nn.Module):
         self.conv5_1 = nn.Linear(128, 2)
         self.conv5_2 = nn.Linear(128, 4)
 
-        weights =np.load(os.path.join(os.path.dirname(__file__), 'rnet.npy'), allow_pickle=True)[()]
+        weights = np.load(os.path.join(os.path.dirname(__file__), 'rnet.npy'), allow_pickle=True)[()]
         for n, p in self.named_parameters():
             p.data = torch.FloatTensor(weights[n])
 
@@ -274,13 +274,13 @@ def _generate_bboxes(probs, offsets, scale, threshold):
 
 
 def detect_faces(image,
-                 min_face_size=20.0,
+                 mtcnn_pro,
+                 min_face_size=30.0,
                  thresholds=[0.6, 0.7, 0.8],
-                 # thresholds=[0.4, 0.6, 0.5],
                  nms_thresholds=[0.7, 0.7, 0.7]):
-
-    pnet, rnet, onet = PNet(), RNet(), ONet()
-    onet.eval()
+    # pnet, rnet, onet = PNet(), RNet(), ONet()
+    pnet, rnet, onet = mtcnn_pro[0], mtcnn_pro[1], mtcnn_pro[2]
+    # onet.eval()
 
     height, width = image.shape[:2]
     min_length = min(height, width)
@@ -293,7 +293,7 @@ def detect_faces(image,
     min_length *= m
     factor_count = 0
     while min_length > min_detection_size:
-        scales.append(m * factor**factor_count)
+        scales.append(m * factor ** factor_count)
         min_length *= factor
         factor_count += 1
 
@@ -322,7 +322,7 @@ def detect_faces(image,
 
     keep = np.where(probs[:, 1] > thresholds[1])[0]
     bounding_boxes = bounding_boxes[keep]
-    bounding_boxes[:, 4] = probs[keep, 1].reshape((-1, ))
+    bounding_boxes[:, 4] = probs[keep, 1].reshape((-1,))
     offsets = offsets[keep]
 
     keep = nms(bounding_boxes, nms_thresholds[1])
@@ -343,7 +343,7 @@ def detect_faces(image,
 
     keep = np.where(probs[:, 1] > thresholds[2])[0]
     bounding_boxes = bounding_boxes[keep]
-    bounding_boxes[:, 4] = probs[keep, 1].reshape((-1, ))
+    bounding_boxes[:, 4] = probs[keep, 1].reshape((-1,))
     offsets = offsets[keep]
     landmarks = landmarks[keep]
 
@@ -362,7 +362,6 @@ def detect_faces(image,
     landmarks = landmarks[keep]
 
     return bounding_boxes, landmarks
-
 
 # if __name__ == '__main__':
 #     import cv2

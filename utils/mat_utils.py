@@ -8,6 +8,14 @@ Created by C. L. Wang on 2020/4/17
 import math
 
 
+def get_box_size(box):
+    """
+    矩形尺寸
+    """
+    x_min, y_min, x_max, y_max = [b for b in box]
+    return (x_max - x_min) * (y_max - y_min)
+
+
 def calculate_arrow(pnt1, pnt2):
     """
     计算角度 pnt2 -> pnt1

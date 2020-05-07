@@ -639,3 +639,19 @@ def unicode_list(data_list):
     :return: unicode列表
     """
     return [unicode_str(s) for s in data_list]
+
+
+def pairwise_list(a_list):
+    """
+    list转换为成对list
+    "s -> (s0,s1), (s1,s2), (s2, s3), ..."
+
+    :param a_list: list
+    :return: 成对list
+    """
+    if len(a_list) % 2 != 0:
+        raise Exception("pairwise_list error!")
+    r_list = []
+    for i in range(0, len(a_list) - 1, 2):
+        r_list.append([a_list[i], a_list[i + 1]])
+    return r_list

@@ -6,7 +6,7 @@ Created by C. L. Wang on 2020/3/13
 """
 
 
-def draw_box(img_bgr, x_min, y_min, x_max, y_max):
+def draw_box(img_bgr, box, is_new=True):
     """
     绘制box
     """
@@ -14,11 +14,14 @@ def draw_box(img_bgr, x_min, y_min, x_max, y_max):
     import copy
     import matplotlib.pyplot as plt
 
-    img_bgr = copy.deepcopy(img_bgr)
+    if is_new:
+        img_bgr = copy.deepcopy(img_bgr)
+
+    x_min, y_min, x_max, y_max = box
 
     ih, iw, _ = img_bgr.shape
     color = (0, 0, 255)
-    tk = 5
+    tk = max(min(ih, iw) // 200, 1)
 
     cv2.rectangle(img_bgr, (x_min, y_min), (x_max, y_max), color, tk)
 
@@ -27,7 +30,7 @@ def draw_box(img_bgr, x_min, y_min, x_max, y_max):
     plt.show()
 
 
-def draw_points(img_bgr, points):
+def draw_points(img_bgr, points, is_new=True):
     """
     绘制多个点
     """
@@ -35,11 +38,13 @@ def draw_points(img_bgr, points):
     import copy
     import matplotlib.pyplot as plt
 
-    img_bgr = copy.deepcopy(img_bgr)
+    if is_new:
+        img_bgr = copy.deepcopy(img_bgr)
 
     color = (0, 255, 0)
-    r = 5
-    tk = 5
+    ih, iw, _ = img_bgr.shape
+    r = max(min(ih, iw) // 200, 1)
+    tk = -1
     for p in points:
         cv2.circle(img_bgr, tuple(p), r, color, tk)
     img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
