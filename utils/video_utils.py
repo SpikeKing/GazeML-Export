@@ -52,7 +52,7 @@ def draw_points(img_bgr, points, is_new=True):
     plt.show()
 
 
-def show_img_bgr(img_bgr):
+def show_img_bgr(img_bgr, save_name=None):
     """
     展示BGR彩色图
     """
@@ -62,6 +62,9 @@ def show_img_bgr(img_bgr):
     img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
     plt.imshow(img_rgb)
     plt.show()
+
+    if save_name:
+        plt.imsave(save_name, img_rgb)
 
 
 def show_img_gray(img_gray, save_name=None):
