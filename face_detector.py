@@ -163,8 +163,7 @@ class FaceDetector(object):
             return p.x, p.y
 
         num_landmarks = landmarks_dlib.num_parts
-        landmarks = np.array([tuple_from_dlib_shape(i) for i in range(num_landmarks)])
-        landmarks = list(landmarks)
+        landmarks = [list(tuple_from_dlib_shape(i)) for i in range(num_landmarks)]
         return landmarks
 
     def get_faces_dwo(self, img_bgr):

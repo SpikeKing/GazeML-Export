@@ -64,14 +64,16 @@ def show_img_bgr(img_bgr):
     plt.show()
 
 
-def show_img_grey(img_grey):
+def show_img_gray(img_gray, save_name=None):
     """
     展示灰度图
     """
     import matplotlib.pyplot as plt
 
-    plt.imshow(img_grey)
+    plt.imshow(img_gray)
     plt.show()
+    if save_name:
+        plt.imsave(save_name, img_gray)
 
 
 def init_vid(vid_path):
