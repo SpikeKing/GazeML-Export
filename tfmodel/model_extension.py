@@ -189,7 +189,7 @@ class TFModelGenerater(object):
 
             offset_scale = tf.cast(eye_width / input_width, tf.float32, name="offset_s")  # 尺寸
 
-            img_eye = tf.slice(img_bgr, [start_y, start_x, 0], [eye_height, eye_width, 3])  # 矩阵剪裁
+            img_eye = tf.slice(img_bgr, [0, start_y, start_x, 0], [1, eye_height, eye_width, 3])  # 矩阵剪裁
             img_eye = tf.image.resize(img_eye, (input_height, input_width))  # resize图像
 
             img_eye_gray = tf.image.rgb_to_grayscale(img_eye)  # 灰度图
@@ -211,8 +211,9 @@ class TFModelGenerater(object):
         """
         替换模型入口
         """
-        img_bgr = tf.placeholder(tf.float32, [None, None, 3], name='img_bgr')
-        face_lm = tf.placeholder(tf.float32, [5, 2], name='landmarks')
+        img_bgr = tf.placeholder(tf.float32, [1, None, None, 3], name='img_bgr')
+        # face_lm = tf.placeholder(tf.float32, [5, 2], name='landmarks')
+        face_lm = tf.placeholder(tf.float32, [51, 2], name='landmarks')
 
         # corner_list = [[2, 3], [1, 0]]  # 关键点: 左眼 右眼
         # corner_list = [[6, 7], [14, 15]]  # 关键点, 左眼、右眼
@@ -260,17 +261,16 @@ class TFModelGenerater(object):
         """
         生成模型
         """
-        img_bgr, face_landmarks, corner_list = self.get_img_and_lms5()
-        # img_bgr, face_landmarks, corner_list = self.get_img_and_lms51_fake()
-
-        show_img_bgr(img_bgr)
+        # img_bgr, face_landmarks, corner_list = self.get_img_and_lms5()
+        img_bgr, face_landmarks, corner_list = self.get_img_and_lms51_fake()
+        img_bgr_batch = np.expand_dims(img_bgr, axis=0)
 
         landmarks_op, radius_op, offsets_op = self.get_model_lms(corner_list)
         sess = tf.Session()
 
         eyes_landmarks, eyes_radius, offsets = \
             sess.run((landmarks_op, radius_op, offsets_op),
-                     feed_dict={'img_bgr:0': img_bgr, "landmarks:0": face_landmarks})
+                     feed_dict={'img_bgr:0': img_bgr_batch, "landmarks:0": face_landmarks})
 
         print('[Info] eyes_landmarks: {}, eyes_radius: {}, offsets: {}'
               .format(eyes_landmarks.shape, eyes_radius.shape, offsets.shape))
@@ -278,7 +278,7 @@ class TFModelGenerater(object):
         self.draw_img(img_bgr, eyes_landmarks, eyes_radius, offsets)  # 绘制图像
         print('[Info] 生成完成!')
 
-        export_pb_name = "gaze-faceX-lms5"
+        export_pb_name = "gaze-faceX-lms51"
         self.save_pb_model(sess, export_pb_name)
         print('[Info] 存储PB模型完成!')
 
@@ -286,9 +286,11 @@ class TFModelGenerater(object):
         """
         测试模型
         """
-        img_bgr, face_landmarks, corner_list = self.get_img_and_lms5()
+        # img_bgr, face_landmarks, corner_list = self.get_img_and_lms5()
+        img_bgr, face_landmarks, corner_list = self.get_img_and_lms51_fake()
+        img_bgr_batch = np.expand_dims(img_bgr, axis=0)
 
-        pb_path = os.path.join('./gaze-faceX-lms5.pb')  # 读取graph
+        pb_path = os.path.join('./gaze-faceX-lms51.pb')  # 读取graph
 
         graph = tf.get_default_graph()
         graph_def = graph.as_graph_def()
@@ -302,7 +304,7 @@ class TFModelGenerater(object):
         sess = tf.Session()
         eyes_landmarks, eyes_radius, offsets = \
             sess.run((landmarks_op, radius_op, offsets_op),
-                     feed_dict={'img_bgr:0': img_bgr, "landmarks:0": face_landmarks})
+                     feed_dict={'img_bgr:0': img_bgr_batch, "landmarks:0": face_landmarks})
 
         self.draw_img(img_bgr, eyes_landmarks, eyes_radius, offsets)  # 绘制图像
         print('[Info] 测试模型完成!')
@@ -310,8 +312,8 @@ class TFModelGenerater(object):
 
 def tf_model_generater_test():
     tmg = TFModelGenerater()
-    # tmg.generate_model()  # 生成
-    tmg.test_model()  # 测试
+    tmg.generate_model()  # 生成
+    # tmg.test_model()  # 测试
 
 
 def main():
