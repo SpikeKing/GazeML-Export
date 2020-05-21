@@ -256,7 +256,7 @@ def main():
     tf.logging.set_verbosity(tf.logging.INFO)
     session = tf.Session(config=session_config)
 
-    batch_size = 2
+    batch_size = 2  # 设置batch
     print('[Info] 输入视频路径: {}'.format(from_video))
     assert os.path.isfile(from_video)
 

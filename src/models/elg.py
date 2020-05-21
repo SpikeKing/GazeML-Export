@@ -255,17 +255,17 @@ class ELG(BaseModel):
             x_now = self._apply_bn(x_now)
             x_now = tf.nn.relu(x_now)
 
-            with tf.variable_scope('hmap'):
+            with tf.variable_scope('hmap'):  # 压缩
                 h = self._apply_conv(x_now, self._hg_num_landmarks, kernel_size=1, stride=1)
 
         x_next = x_now
         if do_merge:
             with tf.variable_scope('merge'):
                 with tf.variable_scope('h'):
-                    x_hmaps = self._apply_conv(h, self._hg_num_feature_maps, kernel_size=1, stride=1)
+                    x_hmaps = self._apply_conv(h, self._hg_num_feature_maps, kernel_size=1, stride=1)  # 膨胀
                 with tf.variable_scope('x'):
                     x_now = self._apply_conv(x_now, self._hg_num_feature_maps, kernel_size=1, stride=1)
-                x_next += x_prev + x_hmaps
+                x_next += x_prev + x_hmaps  # 合并
         return x_next, h
 
     _softargmax_coords = None
@@ -294,8 +294,10 @@ class ELG(BaseModel):
             beta = 1e2
             if self._data_format == 'NHWC':
                 x = tf.transpose(x, (0, 3, 1, 2))
+
             x = tf.reshape(x, [-1, self._hg_num_landmarks, h*w])
             x = tf.nn.softmax(beta * x, axis=-1)
+
             lmrk_xs = tf.reduce_sum(ref_xs * x, axis=[2])
             lmrk_ys = tf.reduce_sum(ref_ys * x, axis=[2])
 
