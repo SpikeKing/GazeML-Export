@@ -260,18 +260,24 @@ def main():
     print('[Info] 输入视频路径: {}'.format(from_video))
     assert os.path.isfile(from_video)
 
+    # 模型包括大模型和小模型
     data_source = Video(from_video,
                         tensorflow_session=session,
                         batch_size=batch_size,
                         data_format='NCHW' if gpu_available else 'NHWC',
-                        eye_image_shape=(108, 180))
+                        # eye_image_shape=(108, 180)
+                        eye_image_shape=(36, 60)
+                        )
 
     # Define model
     model = ELG(
         session, train_data={'videostream': data_source},
-        first_layer_stride=3,
-        num_modules=3,
-        num_feature_maps=64,
+        # first_layer_stride=3,
+        first_layer_stride=1,
+        # num_modules=3,
+        num_modules=2,
+        # num_feature_maps=64,
+        num_feature_maps=32,
         learning_schedule=[
             {
                 'loss_terms_to_optimize': {'dummy': ['hourglass', 'radius']},

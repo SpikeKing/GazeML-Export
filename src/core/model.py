@@ -393,7 +393,7 @@ class BaseModel(object):
             constant_graph = graph_util.convert_variables_to_constants(
                 sess, sess.graph_def,
                 [
-                    'hourglass/hg_2/after/hmap/conv/BiasAdd',  # heatmaps
+                    # 'hourglass/hg_2/after/hmap/conv/BiasAdd',  # heatmaps
                     'upscale/mul',  # landmarks
                     'radius/out/fc/BiasAdd',  # radius
                     'Video/fifo_queue_DequeueMany',  # frame_index, eye, eye_index
@@ -427,7 +427,7 @@ class BaseModel(object):
             # import graph into session
             tf.import_graph_def(graph_def, name='')
 
-            gaze_opt_name = "gaze_opt_b2"  # 名字需要与batch_size对齐，位于vid_demo.py
+            gaze_opt_name = "gaze_opt_b2_small"  # 名字需要与batch_size对齐，位于vid_demo.py
 
             tf.train.write_graph(graph_def, MODELS_DIR, "{}.pb".format(gaze_opt_name), as_text=False)
             tf.train.write_graph(graph_def, MODELS_DIR, "{}.pbtxt".format(gaze_opt_name), as_text=True)
