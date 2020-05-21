@@ -20,8 +20,10 @@ class EyesDetector(object):
     def __init__(self):
         self.fd = FaceDetector()
 
-        pb_path = os.path.join(MODELS_DIR, 'gaze_opt_b2.m.pb')
         # pb_path = os.path.join(MODELS_DIR, 'gaze_opt_b1.m.pb')
+        # pb_path = os.path.join(MODELS_DIR, 'gaze_opt_b2.m.pb')  # 108, 180
+        # pb_path = os.path.join(MODELS_DIR, 'gaze_opt_b2_small.pb')
+        pb_path = os.path.join(MODELS_DIR, 'gaze_opt_b2_small.m.pb')  # 36, 60
 
         self.sess = self.get_model_sess(pb_path)
 
@@ -50,7 +52,6 @@ class EyesDetector(object):
 
     def get_ops_m(self, sess):
         eye_op = sess.graph.get_tensor_by_name('Placeholder:0')
-        heatmaps_op = sess.graph.get_tensor_by_name('hourglass/hg_2/after/hmap/conv/BiasAdd:0')
         landmarks_op = sess.graph.get_tensor_by_name('upscale/mul:0')
         radius_op = sess.graph.get_tensor_by_name('radius/out/fc/BiasAdd:0')
 
@@ -64,7 +65,8 @@ class EyesDetector(object):
         landmarks = np.array(landmarks)
 
         # Final output dimensions
-        oh, ow = (108, 180)
+        # oh, ow = (108, 180)
+        oh, ow = (36, 60)
 
         # Segment eyes
         # for corner1, corner2, is_left in [(36, 39, True), (42, 45, False)]:
@@ -172,7 +174,7 @@ class EyesDetector(object):
         print('[Info] eye2: {}'.format(eye1.shape))
 
         eyes = np.concatenate((eye1, eye2), axis=0)
-        eyes_batch = eyes.reshape(2, 108, 180, 1)
+        eyes_batch = eyes.reshape(2, 36, 60, 1)
 
         return eyes_batch
 
@@ -187,7 +189,6 @@ class EyesDetector(object):
         for i in range(2):
             eye_landmarks = info_dict['eye_landmarks'][i]
             eye_image = info_dict['eyes_info'][i]['image']
-            eye_radius = info_dict['eye_radius'][i][0]
             eye = info_dict['eyes_info'][i]
             eye_side = info_dict['eyes_info'][i]['side']
 
@@ -219,7 +220,6 @@ class EyesDetector(object):
             # 计算视线方向强度
             iris_center = eye_landmarks[16]
             eyeball_center = eye_landmarks[17]
-            eyeball_radius = np.linalg.norm(eyeball_center - iris_center) / eye_radius * 100
 
             # 绘制瞳孔中心
             cv2.drawMarker(
@@ -364,7 +364,7 @@ class EyesDetector(object):
             # img_path = os.path.join(IMGS_DIR, 'xxx.gaze.{}.jpg'.format(str(eye_side)))
             # cv2.imwrite(img_path, image_out)
 
-    def merge_info(self, img_bgr, img_gray, box, landmarks, eyes_info, eye_landmarks, eye_radius):
+    def merge_info(self, img_bgr, img_gray, box, landmarks, eyes_info, eye_landmarks):
         """
         合并算法信息
         """
@@ -376,7 +376,6 @@ class EyesDetector(object):
         info_dict['face_landmarks'] = landmarks
         info_dict['eyes_info'] = eyes_info
         info_dict['eye_landmarks'] = eye_landmarks
-        info_dict['eye_radius'] = eye_radius
 
         return info_dict
 
@@ -410,15 +409,14 @@ class EyesDetector(object):
         eyes_batch = self.get_eyes_batch(eyes_info)
 
         eye_op, landmarks_op, radius_op = self.get_ops_m(self.sess)
-
         # Placeholder_1 = self.sess.graph.get_tensor_by_name('learning_params/Placeholder_1:0')
         # feed_dict = {eye: eyeI, Placeholder_1: False}
         feed_dict = {eye_op: eyes_batch}
         eye_landmarks, eye_radius = self.sess.run((landmarks_op, radius_op), feed_dict=feed_dict)
         print('[Info] eye_landmarks: {}'.format(eye_landmarks.shape))
-        print('[Info] eye_radius: {}'.format(eye_radius.shape))
+        print('[Info] eye_landmarks: {}'.format(eye_landmarks))
 
-        info_dict = self.merge_info(img_bgr, img_gray, box, landmarks, eyes_info, eye_landmarks, eye_radius)
+        info_dict = self.merge_info(img_bgr, img_gray, box, landmarks, eyes_info, eye_landmarks)
 
         # self.draw_eye_with_info(info_dict)
         self.draw_img_with_info(info_dict)
