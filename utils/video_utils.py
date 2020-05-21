@@ -30,7 +30,7 @@ def draw_box(img_bgr, box, is_new=True):
     plt.show()
 
 
-def draw_points(img_bgr, points, is_new=True):
+def draw_points(img_bgr, points, is_new=True, save_name=None):
     """
     绘制多个点
     """
@@ -46,10 +46,15 @@ def draw_points(img_bgr, points, is_new=True):
     r = max(min(ih, iw) // 200, 1)
     tk = -1
     for p in points:
+        p = (int(p[0]), int(p[1]))
         cv2.circle(img_bgr, tuple(p), r, color, tk)
     img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
     plt.imshow(img_rgb)
     plt.show()
+
+    if save_name:
+        print('[Info] 存储图像: {}'.format(save_name))
+        plt.imsave(save_name, img_rgb)
 
 
 def show_img_bgr(img_bgr, save_name=None):
@@ -64,6 +69,7 @@ def show_img_bgr(img_bgr, save_name=None):
     plt.show()
 
     if save_name:
+        print('[Info] 存储图像: {}'.format(save_name))
         plt.imsave(save_name, img_rgb)
 
 
@@ -76,6 +82,7 @@ def show_img_gray(img_gray, save_name=None):
     plt.imshow(img_gray)
     plt.show()
     if save_name:
+        print('[Info] 存储图像: {}'.format(save_name))
         plt.imsave(save_name, img_gray)
 
 

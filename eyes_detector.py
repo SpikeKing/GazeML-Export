@@ -20,8 +20,9 @@ class EyesDetector(object):
     def __init__(self):
         self.fd = FaceDetector()
 
-        # pb_path = os.path.join(MODELS_DIR, 'gaze_opt_b2.pb')
         pb_path = os.path.join(MODELS_DIR, 'gaze_opt_b2.m.pb')
+        # pb_path = os.path.join(MODELS_DIR, 'gaze_opt_b1.m.pb')
+
         self.sess = self.get_model_sess(pb_path)
 
     def get_model_sess(self, pb_path):
@@ -378,6 +379,24 @@ class EyesDetector(object):
         info_dict['eye_radius'] = eye_radius
 
         return info_dict
+
+    def save_pb_model(self, sess, export_pb_name):
+        """
+        存储PB模型
+        :param sess: session
+        :param export_pb_name: pb名称
+        :return: 写入文件
+        """
+        from tensorflow.python.framework import graph_util
+        constant_graph = graph_util.convert_variables_to_constants(
+            sess, sess.graph_def,
+            [
+                'upscale/mul',  # landmarks
+            ])
+        graph_def = tf.GraphDef()
+        graph_def.ParseFromString(constant_graph.SerializeToString())
+        tf.train.write_graph(graph_def, './', '{}.pb'.format(export_pb_name), as_text=False)
+        tf.train.write_graph(graph_def, './', '{}.pbtxt'.format(export_pb_name), as_text=True)
 
     def process(self, img_bgr):
         """
